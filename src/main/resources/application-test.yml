@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:linkforge_test}
+    username: ${DB_USERNAME:test_user}
+    password: ${DB_PASSWORD:test_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  mail:
+    host: localhost
+    port: 1025
+
+application:
+  jwt:
+    secret: ${JWT_SECRET:testSecretKeyForCICD32CharactersMinimum1234567890}
+  base-url: http://localhost:8080
+  frontend-url: http://localhost:3000
+  safe-browsing:
+    enabled: false
+
+logging:
+  level:
+    com.linkforge: DEBUG
+    org.springframework.security: DEBUG
