@@ -1,0 +1,198 @@
+name: LinkForge CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  JAVA_VERSION: '21'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/linkforge
+
+jobs:
+  # ============================================================
+  # Job 1: Build & Test
+  # ============================================================
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: linkforge_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn compile -B --no-transfer-progress
+
+      - name: Run Unit Tests
+        run: mvn test -B --no-transfer-progress
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          JWT_SECRET: testSecretKeyForCICD32CharactersMinimum1234567890
+          DB_HOST: localhost
+          DB_USERNAME: test_user
+          DB_PASSWORD: test_password
+          REDIS_HOST: localhost
+
+      - name: Run Integration Tests
+        run: mvn verify -P integration-tests -B --no-transfer-progress
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          JWT_SECRET: testSecretKeyForCICD32CharactersMinimum1234567890
+
+      - name: Generate Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Maven Tests
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+
+      - name: Upload Coverage Report
+        uses: codecov/codecov-action@v4
+        with:
+          file: target/site/jacoco/jacoco.xml
+
+  # ============================================================
+  # Job 2: Static Analysis & Security
+  # ============================================================
+  security-scan:
+    name: Security & Code Analysis
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: OWASP Dependency Check
+        run: mvn org.owasp:dependency-check-maven:check -B --no-transfer-progress
+        continue-on-error: false
+
+      - name: SpotBugs Analysis
+        run: mvn spotbugs:check -B --no-transfer-progress
+        continue-on-error: true
+
+      - name: Upload Dependency Check Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: target/dependency-check-report.html
+
+  # ============================================================
+  # Job 3: Docker Build & Push
+  # ============================================================
+  docker-build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [ build-and-test, security-scan ]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  # ============================================================
+  # Job 4: Deploy to Render (production)
+  # ============================================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}'
+
+      - name: Wait for Deployment
+        run: sleep 60
+
+      - name: Verify Deployment
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.PRODUCTION_URL }}/actuator/health)
+          if [ "$STATUS" != "200" ]; then
+            echo "Deployment health check failed with status: $STATUS"
+            exit 1
+          fi
+          echo "Deployment successful! Health check returned 200."

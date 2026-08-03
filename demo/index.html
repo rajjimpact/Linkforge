@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkForge — Live Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-base: #080810;
+  --bg-surface: #0f0f1e;
+  --bg-card: #141428;
+  --bg-elevated: #1a1a35;
+  --border: rgba(255,255,255,0.07);
+  --border-active: rgba(99,102,241,0.5);
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-glow: rgba(99,102,241,0.25);
+  --secondary: #8b5cf6;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-glow: 0 0 40px rgba(99,102,241,0.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content:''; position:fixed; inset:0; z-index:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  position:fixed; left:0; top:0; bottom:0; width:240px; z-index:100;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display:flex; flex-direction:column;
+  padding:0;
+}
+.sidebar-logo {
+  padding:24px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px;
+}
+.logo-icon {
+  width:36px; height:36px; border-radius:10px;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:900; color:#fff;
+  box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+}
+.logo-text { font-size:18px; font-weight:800; letter-spacing:-0.5px; }
+.logo-text span { color:var(--primary-light); }
+.sidebar-badge {
+  font-size:10px; background:var(--primary); color:#fff;
+  padding:2px 6px; border-radius:20px; margin-left:auto; font-weight:600;
+}
+.nav-section { padding:16px 12px 8px; font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; }
+.nav-item {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px; margin:2px 8px; border-radius:var(--radius-sm);
+  cursor:pointer; transition:all 0.2s; color:var(--text-secondary);
+  font-size:14px; font-weight:500; position:relative;
+}
+.nav-item:hover { background:rgba(255,255,255,0.04); color:var(--text-primary); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.1));
+  color:var(--primary-light);
+  border:1px solid var(--border-active);
+}
+.nav-item .icon { font-size:17px; width:22px; text-align:center; }
+.nav-badge {
+  margin-left:auto; background:var(--primary); color:#fff;
+  font-size:10px; padding:2px 6px; border-radius:20px; font-weight:700;
+}
+.sidebar-footer {
+  margin-top:auto; padding:16px; border-top:1px solid var(--border);
+  font-size:12px; color:var(--text-muted);
+}
+.user-info { display:flex; align-items:center; gap:10px; }
+.user-avatar {
+  width:32px; height:32px; border-radius:50%;
+  background: linear-gradient(135deg,#6366f1,#06b6d4);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:13px; color:#fff;
+}
+
+/* ── Main Content ── */
+.main { margin-left:240px; padding:32px; position:relative; z-index:1; }
+
+/* ── Page Header ── */
+.page-header { margin-bottom:32px; }
+.breadcrumb { font-size:12px; color:var(--text-muted); margin-bottom:8px; }
+.page-title { font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; }
+.page-subtitle { color:var(--text-secondary); font-size:14px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:24px;
+  transition: box-shadow 0.3s;
+}
+.card:hover { box-shadow: var(--shadow-glow); }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.card-title { font-size:16px; font-weight:700; }
+.card-subtitle { font-size:13px; color:var(--text-secondary); margin-top:2px; }
+
+/* ── Stat Cards ── */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card {
+  background: var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:20px; position:relative; overflow:hidden;
+  transition: all 0.3s;
+}
+.stat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: var(--gradient);
+}
+.stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-glow); }
+.stat-card.blue { --gradient: linear-gradient(90deg,#6366f1,#8b5cf6); }
+.stat-card.cyan { --gradient: linear-gradient(90deg,#06b6d4,#3b82f6); }
+.stat-card.green { --gradient: linear-gradient(90deg,#10b981,#34d399); }
+.stat-card.orange { --gradient: linear-gradient(90deg,#f59e0b,#ef4444); }
+.stat-icon { font-size:24px; margin-bottom:12px; }
+.stat-value { font-size:28px; font-weight:800; letter-spacing:-1px; margin-bottom:4px; }
+.stat-label { font-size:13px; color:var(--text-secondary); }
+.stat-trend { font-size:12px; color:var(--success); font-weight:600; margin-top:4px; }
+.stat-trend.down { color:var(--danger); }
+
+/* ── Input ── */
+.form-group { margin-bottom:16px; }
+.form-label { display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; }
+.form-input, .form-select {
+  width:100%; padding:11px 14px;
+  background: var(--bg-elevated); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--text-primary);
+  font-size:14px; font-family:'Inter',sans-serif;
+  transition: all 0.2s; outline:none;
+}
+.form-input:focus, .form-select:focus {
+  border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-glow);
+}
+.form-input::placeholder { color:var(--text-muted); }
+.form-select option { background:var(--bg-elevated); }
+.form-hint { font-size:12px; color:var(--text-muted); margin-top:6px; }
+
+/* ── Buttons ── */
+.btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 18px; border-radius:var(--radius-sm);
+  font-size:14px; font-weight:600; cursor:pointer;
+  border:none; transition:all 0.2s; font-family:'Inter',sans-serif;
+  white-space:nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff; box-shadow:0 4px 15px var(--primary-glow);
+}
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 25px var(--primary-glow); filter:brightness(1.1); }
+.btn-primary:active { transform:translateY(0); }
+.btn-secondary {
+  background:var(--bg-elevated); border:1px solid var(--border);
+  color:var(--text-secondary);
+}
+.btn-secondary:hover { border-color:var(--primary); color:var(--primary-light); }
+.btn-danger { background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:var(--danger); }
+.btn-danger:hover { background:rgba(239,68,68,0.25); }
+.btn-success { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:var(--success); }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-icon { padding:8px; }
+
+/* ── Toggle ── */
+.toggle {
+  width:44px; height:24px; border-radius:12px; position:relative;
+  cursor:pointer; transition:all 0.3s; flex-shrink:0;
+  background:var(--bg-elevated); border:1px solid var(--border);
+}
+.toggle.on { background:var(--primary); border-color:var(--primary); }
+.toggle::after {
+  content:''; position:absolute; top:3px; left:3px;
+  width:16px; height:16px; border-radius:50%; background:#fff;
+  transition:all 0.3s; box-shadow:0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle.on::after { left:23px; }
+
+/* ── Badge ── */
+.badge {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+}
+.badge-active { background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3); }
+.badge-inactive { background:rgba(71,85,105,0.3); color:var(--text-muted); border:1px solid var(--border); }
+.badge-expired { background:rgba(239,68,68,0.15); color:var(--danger); border:1px solid rgba(239,68,68,0.3); }
+.badge-private { background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3); }
+.badge-safe { background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3); }
+
+/* ── Table ── */
+.table-wrap { overflow:auto; border-radius:var(--radius-md); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th {
+  text-align:left; padding:12px 16px;
+  background:var(--bg-elevated); color:var(--text-muted);
+  font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;
+  border-bottom:1px solid var(--border);
+}
+td { padding:14px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+.short-url { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--primary-light); font-weight:500; }
+
+/* ── Progress Bar ── */
+.progress { height:6px; background:var(--bg-elevated); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--primary),var(--secondary)); transition:width 1s ease; }
+
+/* ── Chart ── */
+.chart-container { position:relative; height:200px; display:flex; align-items:flex-end; gap:4px; padding:0 4px; }
+.chart-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.chart-bar-outer { width:100%; background:var(--bg-elevated); border-radius:4px 4px 0 0; position:relative; overflow:hidden; }
+.chart-bar-inner {
+  position:absolute; bottom:0; left:0; right:0; border-radius:4px 4px 0 0;
+  background:linear-gradient(180deg,var(--primary),var(--secondary));
+  transition:height 1s cubic-bezier(0.34,1.56,0.64,1);
+  opacity:0.85;
+}
+.chart-bar-inner:hover { opacity:1; }
+.chart-label { font-size:10px; color:var(--text-muted); }
+
+/* ── Donut Chart ── */
+.donut-wrap { display:flex; align-items:center; gap:24px; }
+.donut-svg { flex-shrink:0; }
+.donut-legend { display:flex; flex-direction:column; gap:10px; }
+.donut-item { display:flex; align-items:center; gap:8px; font-size:13px; }
+.donut-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* ── Notification Toast ── */
+#toast {
+  position:fixed; bottom:24px; right:24px; z-index:9999;
+  max-width:360px; padding:14px 18px; border-radius:var(--radius-md);
+  background: var(--bg-elevated); border:1px solid var(--border);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  display:flex; align-items:center; gap:12px;
+  transform:translateY(120%); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  font-size:14px;
+}
+#toast.show { transform:translateY(0); }
+#toast.success { border-color:rgba(16,185,129,0.4); }
+#toast.error { border-color:rgba(239,68,68,0.4); }
+#toast.info { border-color:rgba(99,102,241,0.4); }
+.toast-icon { font-size:20px; }
+.toast-text { flex:1; }
+.toast-title { font-weight:700; margin-bottom:2px; }
+.toast-msg { color:var(--text-secondary); font-size:12px; }
+
+/* ── URL Result Box ── */
+.url-result {
+  background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.05));
+  border:1px solid var(--border-active); border-radius:var(--radius-md);
+  padding:16px 20px; display:flex; align-items:center; gap:12px;
+  margin-top:16px; animation:slideIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.url-result-link { font-family:'JetBrains Mono',monospace; font-size:16px; color:var(--primary-light); font-weight:600; flex:1; }
+.copy-btn { cursor:pointer; padding:8px 14px; background:var(--primary); color:#fff; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:none; transition:all 0.2s; }
+.copy-btn:hover { filter:brightness(1.15); }
+
+/* ── API Terminal ── */
+.terminal {
+  background:#0a0a14; border:1px solid var(--border);
+  border-radius:var(--radius-md); font-family:'JetBrains Mono',monospace;
+  font-size:13px; overflow:hidden;
+}
+.terminal-header {
+  background:var(--bg-elevated); padding:10px 16px;
+  display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border);
+}
+.terminal-dot { width:10px; height:10px; border-radius:50%; }
+.terminal-title { font-size:12px; color:var(--text-muted); margin-left:4px; font-family:'Inter',sans-serif; }
+.terminal-body { padding:16px; min-height:200px; max-height:360px; overflow-y:auto; }
+.t-line { margin-bottom:4px; line-height:1.5; }
+.t-cmd { color:#94a3b8; }
+.t-cmd::before { content:'$ '; color:#6366f1; }
+.t-green { color:#10b981; }
+.t-blue { color:#60a5fa; }
+.t-yellow { color:#fbbf24; }
+.t-red { color:#f87171; }
+.t-white { color:#f1f5f9; }
+.t-gray { color:#64748b; }
+.t-cursor { display:inline-block; width:8px; height:14px; background:#6366f1; animation:blink 1s infinite; vertical-align:text-bottom; margin-left:2px; }
+@keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+/* ── QR Code Preview ── */
+.qr-preview {
+  width:160px; height:160px; background:white; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; flex-shrink:0;
+  box-shadow:0 8px 30px rgba(0,0,0,0.3);
+}
+.qr-preview canvas { display:block; }
+
+/* ── Tabs ── */
+.tabs { display:flex; gap:4px; background:var(--bg-elevated); padding:4px; border-radius:var(--radius-sm); margin-bottom:20px; width:fit-content; }
+.tab {
+  padding:8px 16px; border-radius:6px; cursor:pointer;
+  font-size:13px; font-weight:600; color:var(--text-muted); transition:all 0.2s;
+}
+.tab.active { background:var(--bg-card); color:var(--text-primary); box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+
+/* ── Security Meter ── */
+.security-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+.security-item:last-child { border-bottom:none; }
+.security-icon { font-size:18px; width:28px; text-align:center; }
+.security-name { font-size:13px; font-weight:600; flex:1; }
+.security-status { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; }
+.security-status.enabled { color:var(--success); }
+.security-status.warning { color:var(--warning); }
+.security-status.disabled { color:var(--danger); }
+.status-dot { width:7px; height:7px; border-radius:50%; background:currentColor; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+
+/* ── Grid Layouts ── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--text-muted); }
+
+/* ── Page Sections ── */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── Glow effects ── */
+.glow-card {
+  position:relative;
+}
+.glow-card::after {
+  content:''; position:absolute; inset:-1px; z-index:-1; border-radius:inherit;
+  background:linear-gradient(135deg,rgba(99,102,241,0.3),transparent,rgba(139,92,246,0.2));
+  opacity:0; transition:opacity 0.3s;
+}
+.glow-card:hover::after { opacity:1; }
+
+/* ── Map Dots ── */
+.world-map { position:relative; height:140px; border-radius:var(--radius-sm); overflow:hidden; background:var(--bg-elevated); }
+.map-dot {
+  position:absolute; width:8px; height:8px; border-radius:50%;
+  background:var(--primary); box-shadow:0 0 10px var(--primary);
+  animation:pingMap 2s infinite;
+}
+@keyframes pingMap {
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.5);opacity:0.5}
+}
+
+/* ── Input row ── */
+.input-row { display:flex; gap:8px; }
+.input-row .form-input { flex:1; }
+
+/* ── Alert ── */
+.alert {
+  padding:12px 16px; border-radius:var(--radius-sm); font-size:13px;
+  display:flex; align-items:center; gap:10px; margin-bottom:16px;
+}
+.alert-info { background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#a5b4fc; }
+.alert-success { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#6ee7b7; }
+.alert-warning { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); color:#fcd34d; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">L</div>
+    <div class="logo-text">Link<span>Forge</span></div>
+    <span class="sidebar-badge">DEMO</span>
+  </div>
+
+  <div class="nav-section">Main</div>
+  <div class="nav-item active" onclick="showPage('dashboard', this)"><span class="icon">⚡</span> Dashboard</div>
+  <div class="nav-item" onclick="showPage('shorten', this)"><span class="icon">🔗</span> Shorten URL</div>
+  <div class="nav-item" onclick="showPage('mylinks', this)"><span class="icon">📋</span> My Links <span class="nav-badge" id="linkCount">4</span></div>
+  <div class="nav-item" onclick="showPage('analytics', this)"><span class="icon">📊</span> Analytics</div>
+  <div class="nav-item" onclick="showPage('qrcodes', this)"><span class="icon">▦</span> QR Codes</div>
+
+  <div class="nav-section">Developer</div>
+  <div class="nav-item" onclick="showPage('apikeys', this)"><span class="icon">🔑</span> API Keys</div>
+  <div class="nav-item" onclick="showPage('swagger', this)"><span class="icon">📖</span> Swagger UI</div>
+
+  <div class="nav-section">System</div>
+  <div class="nav-item" onclick="showPage('security', this)"><span class="icon">🛡️</span> Security</div>
+  <div class="nav-item" onclick="showPage('admin', this)"><span class="icon">👑</span> Admin Panel</div>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">RV</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Rajvardhan</div>
+        <div style="font-size:11px">raj@linkforge.io · ADMIN</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<main class="main">
+
+<!-- ─────── DASHBOARD ─────── -->
+<div id="page-dashboard" class="page active">
+  <div class="page-header">
+    <div class="breadcrumb">Home › Dashboard</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Welcome back, Rajvardhan 👋</div>
+        <div class="page-subtitle">Here's what's happening with your links today.</div>
+      </div>
+      <button class="btn btn-primary" onclick="showPage('shorten', document.querySelector('.nav-item:nth-child(5)'))">+ Shorten URL</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-icon">🔗</div>
+      <div class="stat-value" id="stat-links">4</div>
+      <div class="stat-label">Total Links</div>
+      <div class="stat-trend">↑ 2 this week</div>
+    </div>
+    <div class="stat-card cyan">
+      <div class="stat-icon">📈</div>
+      <div class="stat-value" id="stat-clicks">12,847</div>
+      <div class="stat-label">Total Clicks</div>
+      <div class="stat-trend">↑ 24% vs last week</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">▦</div>
+      <div class="stat-value">1,293</div>
+      <div class="stat-label">QR Scans</div>
+      <div class="stat-trend">↑ 12% vs last week</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon">🌍</div>
+      <div class="stat-value">38</div>
+      <div class="stat-label">Countries Reached</div>
+      <div class="stat-trend">🇮🇳 India #1</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Clicks Chart -->
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Clicks Over Time</div><div class="card-subtitle">Last 7 days</div></div>
+        <select class="form-select" style="width:auto;padding:6px 10px;font-size:12px" onchange="updateChart(this.value)">
+          <option>7 Days</option><option>30 Days</option><option>90 Days</option>
+        </select>
+      </div>
+      <div class="chart-container" id="clickChart"></div>
+    </div>
+
+    <!-- Device Share -->
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Device Breakdown</div><div class="card-subtitle">Human clicks only</div></div>
+      </div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#1a1a35" stroke-width="22"/>
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#6366f1" stroke-width="22"
+            stroke-dasharray="155 128" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#06b6d4" stroke-width="22"
+            stroke-dasharray="90 193" stroke-dashoffset="-155" transform="rotate(-90 60 60)"/>
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" stroke-width="22"
+            stroke-dasharray="38 245" stroke-dashoffset="-245" transform="rotate(-90 60 60)"/>
+          <text x="60" y="64" text-anchor="middle" fill="#f1f5f9" font-size="13" font-family="Inter" font-weight="700">54%</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="donut-item"><div class="donut-dot" style="background:#6366f1"></div> <span style="flex:1;color:var(--text-secondary)">Desktop</span> <b>54%</b></div>
+          <div class="donut-item"><div class="donut-dot" style="background:#06b6d4"></div> <span style="flex:1;color:var(--text-secondary)">Mobile</span> <b>31%</b></div>
+          <div class="donut-item"><div class="donut-dot" style="background:#10b981"></div> <span style="flex:1;color:var(--text-secondary)">Tablet</span> <b>15%</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Links -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div><div class="card-title">Top Performing Links</div></div>
+      <button class="btn btn-secondary btn-sm" onclick="showPage('mylinks',null)">View All →</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Short URL</th><th>Original</th><th>Clicks</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody id="topLinksTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── SHORTEN ─────── -->
+<div id="page-shorten" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › Shorten URL</div>
+    <div class="page-title">Create Short URL</div>
+    <div class="page-subtitle">Shorten, customize, and track any link.</div>
+  </div>
+
+  <div class="grid-2" style="align-items:start">
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔗 New Short Link</div></div>
+
+        <div class="form-group">
+          <label class="form-label">Long URL *</label>
+          <input id="longUrl" class="form-input" type="url" placeholder="https://your-very-long-url.com/that/needs/shortening" />
+          <div class="form-hint" id="urlValidation"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Custom Alias <span style="color:var(--text-muted)">(optional)</span></label>
+          <div class="input-row">
+            <div style="padding:11px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:14px;white-space:nowrap">lf.io/</div>
+            <input id="customAlias" class="form-input" type="text" placeholder="my-brand-link" style="border-radius:0 var(--radius-sm) var(--radius-sm) 0"/>
+          </div>
+          <div class="form-hint">3-50 chars · letters, numbers, - and _ only</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Expiry</label>
+          <select id="expirySelect" class="form-select">
+            <option value="never">Never Expire</option>
+            <option value="1h">1 Hour</option>
+            <option value="1d">1 Day</option>
+            <option value="1w">1 Week</option>
+            <option value="1m">1 Month</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:16px;margin-bottom:16px">
+          <div style="flex:1">
+            <label class="form-label">🔒 Password Protect</label>
+            <input id="linkPwd" class="form-input" type="password" placeholder="Optional password"/>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:24px;margin-bottom:20px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+            <div class="toggle" id="togglePrivate" onclick="toggleEl(this)"></div>
+            <span>Private Link</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+            <div class="toggle" id="toggleOneTime" onclick="toggleEl(this)"></div>
+            <span>One-Time Link</span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px" onclick="shortenUrl()">
+          ⚡ Shorten URL
+        </button>
+
+        <div id="shortenResult" style="display:none"></div>
+      </div>
+
+      <!-- Safe Browsing -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-header"><div class="card-title">🛡️ Safe Browsing Check</div></div>
+        <div id="safeBrowsingResult">
+          <div style="color:var(--text-secondary);font-size:13px">Enter a URL above to check it against Google Safe Browsing.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right side -->
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📡 Live API Preview</div></div>
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="terminal-dot" style="background:#ef4444"></div>
+            <div class="terminal-dot" style="background:#f59e0b"></div>
+            <div class="terminal-dot" style="background:#10b981"></div>
+            <span class="terminal-title">POST /api/v1/urls</span>
+          </div>
+          <div class="terminal-body" id="apiPreview">
+            <div class="t-line t-gray">// Fill in the form to see the request</div>
+            <div class="t-line t-gray">// ─────────────────────────────</div>
+            <div class="t-line t-cmd">curl -X POST https://api.linkforge.io/api/v1/urls \</div>
+            <div class="t-line t-cmd" style="padding-left:20px">-H "Authorization: Bearer &lt;JWT&gt;" \</div>
+            <div class="t-line t-cmd" style="padding-left:20px">-H "Content-Type: application/json" \</div>
+            <div class="t-line t-cmd" style="padding-left:20px">-d '{</div>
+            <div class="t-line t-cmd" style="padding-left:32px">"originalUrl": "<span id="previewUrl" style="color:#a5f3fc">https://example.com</span>",</div>
+            <div class="t-line t-cmd" style="padding-left:32px">"expiryPreset": "<span id="previewExpiry" style="color:#86efac">never</span>"</div>
+            <div class="t-line t-cmd" style="padding-left:20px">}'</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="card-header"><div class="card-title">✨ Features Used</div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="featuresBadges">
+          <span class="badge badge-safe">✓ URL Sanitizer</span>
+          <span class="badge badge-safe">✓ Base62 ShortCode</span>
+          <span class="badge badge-safe">✓ Redis Cache</span>
+          <span class="badge badge-safe">✓ JWT Auth</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── MY LINKS ─────── -->
+<div id="page-mylinks" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › My Links</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="page-title">My Links</div><div class="page-subtitle">Manage and track all your shortened URLs.</div></div>
+      <div style="display:flex;gap:10px">
+        <input id="searchLinks" class="form-input" style="width:220px" placeholder="🔍  Search links..." oninput="filterLinks()">
+        <button class="btn btn-primary" onclick="showPage('shorten',null)">+ New Link</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Short URL</th><th>Original</th><th>Clicks</th><th>Status</th><th>Expiry</th><th>Actions</th></tr></thead>
+        <tbody id="linksTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── ANALYTICS ─────── -->
+<div id="page-analytics" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › Analytics</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="page-title">Analytics Dashboard</div><div class="page-subtitle">Deep insights into your link performance.</div></div>
+      <select class="form-select" style="width:140px" id="analyticsLink" onchange="updateAnalytics()">
+        <option value="all">All Links</option>
+        <option value="resume">lf.io/resume</option>
+        <option value="github">lf.io/github</option>
+        <option value="portfolio">lf.io/portfolio</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card blue"><div class="stat-icon">👆</div><div class="stat-value" id="a-total">12,847</div><div class="stat-label">Total Clicks</div></div>
+    <div class="stat-card cyan"><div class="stat-icon">🙋</div><div class="stat-value" id="a-unique">8,421</div><div class="stat-label">Unique Visitors</div></div>
+    <div class="stat-card green"><div class="stat-icon">🤖</div><div class="stat-value" id="a-bot">1,204</div><div class="stat-label">Bot Clicks</div></div>
+    <div class="stat-card orange"><div class="stat-icon">⏱️</div><div class="stat-value">2.8ms</div><div class="stat-label">Avg Redirect</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">📅 Daily Clicks</div></div>
+      <div class="chart-container" id="analyticsChart"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🌍 Top Countries</div></div>
+      <div id="countryList"></div>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-top:20px">
+    <div class="card">
+      <div class="card-header"><div class="card-title">🌐 Browsers</div></div>
+      <div id="browserList"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📱 OS</div></div>
+      <div id="osList"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🔗 Top Referrers</div></div>
+      <div id="referrerList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── QR CODES ─────── -->
+<div id="page-qrcodes" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › QR Codes</div>
+    <div class="page-title">QR Code Generator</div>
+    <div class="page-subtitle">Generate high-resolution QR codes for any link.</div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">⚙️ QR Settings</div></div>
+      <div class="form-group">
+        <label class="form-label">Select Link</label>
+        <select class="form-select" id="qrLink" onchange="renderQR()">
+          <option value="https://lf.io/resume">lf.io/resume → My Resume</option>
+          <option value="https://lf.io/github">lf.io/github → GitHub</option>
+          <option value="https://lf.io/portfolio">lf.io/portfolio → Portfolio</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Size</label>
+        <select class="form-select" id="qrSize" onchange="renderQR()">
+          <option value="128">128px (Small)</option>
+          <option value="256" selected>256px (Medium)</option>
+          <option value="512">512px (Large)</option>
+          <option value="1024">1024px (High-Res)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:16px">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">Foreground Color</label>
+          <input type="color" id="qrFg" value="#6366f1" class="form-input" style="height:44px;padding:4px;cursor:pointer" onchange="renderQR()">
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">Background Color</label>
+          <input type="color" id="qrBg" value="#ffffff" class="form-input" style="height:44px;padding:4px;cursor:pointer" onchange="renderQR()">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="downloadQR()">⬇ Download PNG</button>
+        <button class="btn btn-secondary" onclick="renderQR()">🔄 Regenerate</button>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Preview</div>
+      <canvas id="qrCanvas" width="200" height="200" style="border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.4)"></canvas>
+      <div style="text-align:center">
+        <div style="font-size:13px;color:var(--text-secondary)" id="qrInfo">lf.io/resume · 256px</div>
+        <div class="badge badge-safe" style="margin-top:8px">📊 Scan tracking active</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── API KEYS ─────── -->
+<div id="page-apikeys" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › API Keys</div>
+    <div class="page-title">Developer API Keys</div>
+    <div class="page-subtitle">Manage API keys for programmatic access to LinkForge.</div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔑 Create API Key</div></div>
+        <div class="form-group">
+          <label class="form-label">Key Name</label>
+          <input id="keyName" class="form-input" type="text" placeholder="e.g., Production App, CI/CD Pipeline"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rate Limit (req/min)</label>
+          <select id="keyRateLimit" class="form-select">
+            <option value="60">60 req/min (Default)</option>
+            <option value="120">120 req/min</option>
+            <option value="300">300 req/min</option>
+            <option value="1000">1000 req/min (Enterprise)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="generateApiKey()">⚡ Generate API Key</button>
+        <div id="apiKeyResult" style="margin-top:16px;display:none">
+          <div class="alert alert-warning">⚠️ Save this key now — it will NOT be shown again!</div>
+          <div class="terminal">
+            <div class="terminal-header">
+              <div class="terminal-dot" style="background:#10b981"></div>
+              <span class="terminal-title">Your new API key</span>
+            </div>
+            <div class="terminal-body">
+              <div class="t-line t-green" id="generatedKey" style="font-size:15px;letter-spacing:1px"></div>
+              <div style="height:12px"></div>
+              <div class="t-line t-gray">// Usage:</div>
+              <div class="t-line t-cmd">curl -X POST https://api.linkforge.io/api/v1/shorten \</div>
+              <div class="t-line t-cmd" style="padding-left:20px">-H "Authorization: Bearer lf_•••••" \</div>
+              <div class="t-line t-cmd" style="padding-left:20px">-d '{"originalUrl": "https://example.com"}'</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🗝️ Active Keys</div></div>
+        <div id="apiKeyList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── SWAGGER ─────── -->
+<div id="page-swagger" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › Swagger UI</div>
+    <div class="page-title">API Documentation</div>
+    <div class="page-subtitle">Interactive API explorer powered by OpenAPI 3.0.</div>
+  </div>
+  <div class="card">
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <span class="badge" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--success);font-size:12px;padding:6px 12px">GET</span>
+      <span class="badge" style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:12px;padding:6px 12px">POST</span>
+      <span class="badge" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--warning);font-size:12px;padding:6px 12px">PUT</span>
+      <span class="badge" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);font-size:12px;padding:6px 12px">DELETE</span>
+    </div>
+    <div id="swaggerEndpoints"></div>
+  </div>
+</div>
+
+<!-- ─────── SECURITY ─────── -->
+<div id="page-security" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › Security</div>
+    <div class="page-title">Security Overview</div>
+    <div class="page-subtitle">Real-time security posture of your LinkForge instance.</div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">🛡️ Security Features</div></div>
+      <div id="securityFeatures"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📋 Audit Log</div></div>
+      <div id="auditLog" style="font-family:'JetBrains Mono',monospace;font-size:12px;max-height:350px;overflow-y:auto"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <div class="card-header"><div class="card-title">🔐 JWT Inspector</div></div>
+    <div class="grid-2">
+      <div>
+        <div class="form-group">
+          <label class="form-label">Paste JWT Token</label>
+          <textarea id="jwtInput" class="form-input" rows="4" placeholder="eyJhbGciOiJIUzI1NiJ9..." style="resize:none;font-family:'JetBrains Mono',monospace;font-size:12px" oninput="decodeJWT()"></textarea>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadSampleJWT()">Load Sample JWT</button>
+      </div>
+      <div>
+        <div class="form-label" style="margin-bottom:12px">Decoded Payload</div>
+        <div class="terminal" style="min-height:0">
+          <div class="terminal-body" id="jwtDecoded" style="min-height:120px">
+            <div class="t-line t-gray">// Paste a JWT to decode</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── ADMIN ─────── -->
+<div id="page-admin" class="page">
+  <div class="page-header">
+    <div class="breadcrumb">Home › Admin Panel</div>
+    <div class="page-title">👑 Admin Panel</div>
+    <div class="page-subtitle">Platform-wide management — ADMIN role required.</div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card blue"><div class="stat-icon">👥</div><div class="stat-value">2,847</div><div class="stat-label">Total Users</div></div>
+    <div class="stat-card cyan"><div class="stat-icon">🔗</div><div class="stat-value">41,293</div><div class="stat-label">Total URLs</div></div>
+    <div class="stat-card green"><div class="stat-icon">📊</div><div class="stat-value">2.1M</div><div class="stat-label">Total Clicks</div></div>
+    <div class="stat-card orange"><div class="stat-icon">🔑</div><div class="stat-value">312</div><div class="stat-label">API Keys</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">👥 User Management</div></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Links</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="adminUsersTable"></tbody>
+    </table></div>
+  </div>
+</div>
+
+</main>
+
+<!-- Toast -->
+<div id="toast">
+  <div class="toast-icon" id="toastIcon">✅</div>
+  <div class="toast-text">
+    <div class="toast-title" id="toastTitle"></div>
+    <div class="toast-msg" id="toastMsg"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+const state = {
+  links: [
+    { id:'1', shortCode:'resume', originalUrl:'https://docs.google.com/my-cv-2024', clicks:5842, active:true, expiry:'Never', private:false, oneTime:false, created:'2025-07-01' },
+    { id:'2', shortCode:'github', originalUrl:'https://github.com/rajvardhan', clicks:3291, active:true, expiry:'Never', private:false, oneTime:false, created:'2025-06-15' },
+    { id:'3', shortCode:'portfolio', originalUrl:'https://rajvardhan.dev', clicks:2910, active:true, expiry:'2026-12-31', private:false, oneTime:false, created:'2025-05-20' },
+    { id:'4', shortCode:'design-review', originalUrl:'https://figma.com/file/xyz/design-review-v3', clicks:804, active:false, expiry:'2026-08-01', private:true, oneTime:false, created:'2025-07-28' },
+  ],
+  apiKeys: [
+    { id:'k1', name:'Production App', prefix:'lf_prod_ab12', rateLimit:120, used:4821, created:'2025-06-01' },
+    { id:'k2', name:'CI/CD Pipeline', prefix:'lf_cicd_cd34', rateLimit:60, used:293, created:'2025-07-15' },
+  ]
+};
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  // Init page
+  if (name === 'dashboard') initDashboard();
+  if (name === 'mylinks') renderLinksTable();
+  if (name === 'analytics') initAnalytics();
+  if (name === 'qrcodes') { initQR(); setTimeout(renderQR, 100); }
+  if (name === 'apikeys') renderApiKeys();
+  if (name === 'swagger') renderSwagger();
+  if (name === 'security') initSecurity();
+  if (name === 'admin') renderAdmin();
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+let toastTimer;
+function toast(title, msg, type='success') {
+  clearTimeout(toastTimer);
+  const icons = { success:'✅', error:'❌', info:'ℹ️', warning:'⚠️' };
+  document.getElementById('toastIcon').textContent = icons[type]||'✅';
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent = msg;
+  const el = document.getElementById('toast');
+  el.className = 'show ' + type;
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ══════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════
+function initDashboard() {
+  const data = [1240, 980, 1580, 2100, 1840, 2290, 2813];
+  buildChart('clickChart', data, ['M','T','W','T','F','S','S']);
+  renderTopLinks();
+}
+
+function renderTopLinks() {
+  const sorted = [...state.links].sort((a,b) => b.clicks - a.clicks).slice(0,4);
+  const tbody = document.getElementById('topLinksTable');
+  tbody.innerHTML = sorted.map(l => `
+    <tr>
+      <td><span class="short-url">lf.io/${l.shortCode}</span></td>
+      <td style="color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.originalUrl}</td>
+      <td><b>${l.clicks.toLocaleString()}</b></td>
+      <td><span class="badge ${l.active ? 'badge-active':'badge-inactive'}">${l.active?'● Active':'● Inactive'}</span></td>
+      <td style="color:var(--text-muted);font-size:12px">${l.created}</td>
+    </tr>
+  `).join('');
+}
+
+function updateChart(period) {
+  const datasets = {
+    '7 Days':  [1240,980,1580,2100,1840,2290,2813],
+    '30 Days': Array.from({length:30},()=>Math.floor(Math.random()*2000+500)),
+    '90 Days': Array.from({length:30},()=>Math.floor(Math.random()*3000+800)),
+  };
+  const labels = period === '7 Days'
+    ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    : Array.from({length:30},(_,i)=>`D${i+1}`);
+  buildChart('clickChart', datasets[period]||datasets['7 Days'], labels.slice(0,7));
+}
+
+// ══════════════════════════════════════════════════════════
+// CHART BUILDER
+// ══════════════════════════════════════════════════════════
+function buildChart(containerId, data, labels) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const max = Math.max(...data);
+  const H = 180;
+  el.innerHTML = data.map((v,i) => `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar-outer" style="height:${H}px">
+        <div class="chart-bar-inner" id="bar-${containerId}-${i}" style="height:0" title="${v.toLocaleString()} clicks"></div>
+      </div>
+      <div class="chart-label">${labels[i]||''}</div>
+    </div>
+  `).join('');
+  setTimeout(() => data.forEach((v,i) => {
+    const bar = document.getElementById(`bar-${containerId}-${i}`);
+    if (bar) bar.style.height = Math.round((v/max)*H) + 'px';
+  }), 50);
+}
+
+// ══════════════════════════════════════════════════════════
+// SHORTEN URL
+// ══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const longUrlInput = document.getElementById('longUrl');
+  const aliasInput = document.getElementById('customAlias');
+  const expirySelect = document.getElementById('expirySelect');
+
+  if (longUrlInput) {
+    longUrlInput.addEventListener('input', () => {
+      updateApiPreview();
+      validateUrl(longUrlInput.value);
+    });
+  }
+  if (aliasInput) aliasInput.addEventListener('input', updateApiPreview);
+  if (expirySelect) expirySelect.addEventListener('change', updateApiPreview);
+});
+
+function validateUrl(url) {
+  const el = document.getElementById('urlValidation');
+  if (!url) { el.textContent=''; return; }
+  const blocked = ['javascript:','data:','file:','ftp:'];
+  if (blocked.some(b => url.toLowerCase().startsWith(b))) {
+    el.innerHTML = '<span style="color:var(--danger)">❌ Blocked URL scheme</span>';
+    return;
+  }
+  if (url.includes('localhost') || url.includes('127.0.0.1')) {
+    el.innerHTML = '<span style="color:var(--danger)">❌ Private/localhost URLs not allowed</span>';
+    return;
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    el.innerHTML = '<span style="color:var(--success)">✓ Valid URL</span>';
+    checkSafeBrowsing(url);
+  } else {
+    el.innerHTML = '<span style="color:var(--warning)">⚠️ Will auto-add https://</span>';
+  }
+}
+
+function checkSafeBrowsing(url) {
+  const el = document.getElementById('safeBrowsingResult');
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Checking against Google Safe Browsing...</div>';
+  const suspicious = ['phishing','malware','spam'].some(w => url.includes(w));
+  setTimeout(() => {
+    if (suspicious) {
+      el.innerHTML = '<div class="alert alert-warning">⚠️ URL flagged as potentially unsafe by Safe Browsing API</div>';
+    } else {
+      el.innerHTML = '<div class="alert alert-success">✅ URL passed Google Safe Browsing check — no threats detected</div>';
+    }
+  }, 800);
+}
+
+function updateApiPreview() {
+  const url = document.getElementById('longUrl')?.value || 'https://example.com';
+  const alias = document.getElementById('customAlias')?.value;
+  const expiry = document.getElementById('expirySelect')?.value || 'never';
+  document.getElementById('previewUrl').textContent = url || 'https://example.com';
+  document.getElementById('previewExpiry').textContent = expiry;
+
+  const feats = ['✓ URL Sanitizer','✓ Base62 ShortCode','✓ Redis Cache','✓ JWT Auth'];
+  if (alias) feats.push('✓ Custom Alias');
+  if (expiry !== 'never') feats.push('✓ Expiry: ' + expiry);
+  if (document.getElementById('togglePrivate')?.classList.contains('on')) feats.push('✓ Private Link');
+  if (document.getElementById('toggleOneTime')?.classList.contains('on')) feats.push('✓ One-Time Link');
+
+  const fb = document.getElementById('featuresBadges');
+  if (fb) fb.innerHTML = feats.map(f => `<span class="badge badge-safe">${f}</span>`).join('');
+}
+
+function toggleEl(el) {
+  el.classList.toggle('on');
+  updateApiPreview();
+}
+
+function shortenUrl() {
+  const url = document.getElementById('longUrl').value;
+  if (!url) { toast('Error', 'Please enter a URL', 'error'); return; }
+
+  const blocked = ['javascript:','data:','file:'];
+  if (blocked.some(b => url.toLowerCase().startsWith(b))) {
+    toast('Blocked', 'This URL scheme is not allowed', 'error');
+    return;
+  }
+
+  const alias = document.getElementById('customAlias').value.trim();
+  const code = alias || randomBase62();
+  const shortUrl = 'https://lf.io/' + code;
+
+  // Add to state
+  state.links.unshift({
+    id: Date.now().toString(), shortCode: code,
+    originalUrl: url, clicks: 0, active: true, expiry: 'Never',
+    private: document.getElementById('togglePrivate').classList.contains('on'),
+    oneTime: document.getElementById('toggleOneTime').classList.contains('on'),
+    created: new Date().toISOString().split('T')[0]
+  });
+  document.getElementById('linkCount').textContent = state.links.length;
+  document.getElementById('stat-links').textContent = state.links.length;
+
+  // Show result
+  const resultEl = document.getElementById('shortenResult');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `
+    <div class="url-result">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">✅ Your short link is ready</div>
+        <div class="url-result-link">${shortUrl}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Created just now · ${document.getElementById('expirySelect').value === 'never' ? 'No Expiry' : 'Expires: ' + document.getElementById('expirySelect').value}</div>
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('${shortUrl}', this)">📋 Copy</button>
+      <button class="btn btn-secondary btn-sm" onclick="showPage('qrcodes',null)">▦ QR</button>
+    </div>
+  `;
+  toast('Link Created!', shortUrl + ' is ready to share', 'success');
+}
+
+function randomBase62() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({length:7}, () => chars[Math.floor(Math.random()*62)]).join('');
+}
+
+function copyToClipboard(text, btn) {
+  navigator.clipboard?.writeText(text).catch(() => {});
+  btn.textContent = '✓ Copied!';
+  btn.style.background = 'var(--success)';
+  setTimeout(() => { btn.textContent = '📋 Copy'; btn.style.background = ''; }, 2000);
+  toast('Copied!', text, 'info');
+}
+
+// ══════════════════════════════════════════════════════════
+// LINKS TABLE
+// ══════════════════════════════════════════════════════════
+function renderLinksTable(filter='') {
+  const tbody = document.getElementById('linksTable');
+  const links = state.links.filter(l =>
+    l.shortCode.includes(filter) || l.originalUrl.includes(filter)
+  );
+  tbody.innerHTML = links.map(l => `
+    <tr>
+      <td>
+        <span class="short-url" style="cursor:pointer" onclick="toast('Redirect!','→ ${l.originalUrl}','info')">lf.io/${l.shortCode}</span>
+        ${l.private ? '<span class="badge badge-private" style="margin-left:6px">🔒 Private</span>' : ''}
+        ${l.oneTime ? '<span class="badge badge-expired" style="margin-left:4px">1x</span>' : ''}
+      </td>
+      <td style="color:var(--text-secondary);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${l.originalUrl}</td>
+      <td><b>${l.clicks.toLocaleString()}</b></td>
+      <td>
+        <div class="toggle ${l.active?'on':''}" onclick="toggleLink('${l.id}',this)" style="transform:scale(0.85)"></div>
+      </td>
+      <td style="font-size:12px;color:var(--text-muted)">${l.expiry}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="toast('Analytics','Opening analytics for lf.io/${l.shortCode}','info')" title="Analytics">📊</button>
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="showPage('qrcodes',null)" title="QR Code">▦</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteLink('${l.id}')" title="Delete">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterLinks() {
+  renderLinksTable(document.getElementById('searchLinks').value);
+}
+
+function toggleLink(id, el) {
+  const link = state.links.find(l => l.id === id);
+  if (link) {
+    link.active = !link.active;
+    el.classList.toggle('on');
+    toast(link.active ? 'Link Activated' : 'Link Deactivated',
+      `lf.io/${link.shortCode} is now ${link.active ? 'active' : 'inactive'}`,
+      link.active ? 'success' : 'info');
+  }
+}
+
+function deleteLink(id) {
+  const idx = state.links.findIndex(l => l.id === id);
+  if (idx !== -1) {
+    const code = state.links[idx].shortCode;
+    state.links.splice(idx, 1);
+    document.getElementById('linkCount').textContent = state.links.length;
+    renderLinksTable();
+    toast('Deleted', `lf.io/${code} has been removed`, 'info');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ANALYTICS
+// ══════════════════════════════════════════════════════════
+function initAnalytics() {
+  updateAnalytics();
+}
+
+function updateAnalytics() {
+  const sel = document.getElementById('analyticsLink')?.value || 'all';
+  const multiplier = { all:1, resume:0.45, github:0.26, portfolio:0.23 }[sel] || 1;
+  const total = Math.round(12847 * multiplier);
+  const unique = Math.round(8421 * multiplier);
+  const bots = Math.round(1204 * multiplier);
+
+  document.getElementById('a-total').textContent = total.toLocaleString();
+  document.getElementById('a-unique').textContent = unique.toLocaleString();
+  document.getElementById('a-bot').textContent = bots.toLocaleString();
+
+  const data = Array.from({length:7},()=>Math.floor(Math.random()*total/7*1.5+100));
+  buildChart('analyticsChart', data, ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
+
+  // Countries
+  const countries = [
+    { name:'🇮🇳 India', pct:34 }, { name:'🇺🇸 United States', pct:22 },
+    { name:'🇬🇧 United Kingdom', pct:12 }, { name:'🇩🇪 Germany', pct:9 },
+    { name:'🇸🇬 Singapore', pct:7 }, { name:'🇦🇺 Australia', pct:6 },
+    { name:'Others', pct:10 }
+  ];
+  document.getElementById('countryList').innerHTML = countries.map(c => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:13px;flex:1">${c.name}</span>
+      <div class="progress" style="flex:2"><div class="progress-fill" style="width:${c.pct}%"></div></div>
+      <span style="font-size:12px;color:var(--text-muted);width:35px;text-align:right">${c.pct}%</span>
+    </div>
+  `).join('');
+
+  const browsers = [{n:'Chrome',p:58},{n:'Safari',p:22},{n:'Firefox',p:11},{n:'Edge',p:7},{n:'Other',p:2}];
+  document.getElementById('browserList').innerHTML = browsers.map(b => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:13px;flex:1">${b.n}</span>
+      <div class="progress" style="flex:2"><div class="progress-fill" style="width:${b.p}%"></div></div>
+      <span style="font-size:12px;color:var(--text-muted);width:30px;text-align:right">${b.p}%</span>
+    </div>
+  `).join('');
+
+  const oss = [{n:'Windows',p:44},{n:'macOS',p:29},{n:'iOS',p:15},{n:'Android',p:10},{n:'Linux',p:2}];
+  document.getElementById('osList').innerHTML = oss.map(o => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:13px;flex:1">${o.n}</span>
+      <div class="progress" style="flex:2"><div class="progress-fill" style="width:${o.p}%"></div></div>
+      <span style="font-size:12px;color:var(--text-muted);width:30px;text-align:right">${o.p}%</span>
+    </div>
+  `).join('');
+
+  const refs = [{n:'google.com',c:3421},{n:'twitter.com',c:1892},{n:'linkedin.com',c:1203},{n:'github.com',c:892},{n:'Direct',c:4200}];
+  document.getElementById('referrerList').innerHTML = refs.map(r => `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:13px;color:var(--text-secondary)">${r.n}</span>
+      <b style="font-size:13px">${r.c.toLocaleString()}</b>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// QR CODE (Canvas-based)
+// ══════════════════════════════════════════════════════════
+function initQR() {}
+
+function renderQR() {
+  const canvas = document.getElementById('qrCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = parseInt(document.getElementById('qrSize')?.value || '256');
+  const fg = document.getElementById('qrFg')?.value || '#6366f1';
+  const bg = document.getElementById('qrBg')?.value || '#ffffff';
+  const link = document.getElementById('qrLink')?.value || 'https://lf.io/resume';
+
+  canvas.width = 200; canvas.height = 200;
+
+  // Draw background
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 200, 200);
+
+  // Generate deterministic QR pattern from URL hash
+  const seed = simpleHash(link);
+  const modules = 21;
+  const mSize = Math.floor(160 / modules);
+  const offset = 20;
+
+  ctx.fillStyle = fg;
+
+  // Draw finder patterns (3 corners)
+  drawFinder(ctx, offset, offset, mSize, fg);
+  drawFinder(ctx, offset + (modules-7)*mSize, offset, mSize, fg);
+  drawFinder(ctx, offset, offset + (modules-7)*mSize, mSize, fg);
+
+  // Draw data modules using seeded randomness
+  let r = seed;
+  for (let row = 0; row < modules; row++) {
+    for (let col = 0; col < modules; col++) {
+      if (isFinderArea(row, col, modules)) continue;
+      r = (r * 1664525 + 1013904223) & 0xffffffff;
+      if ((r >>> 16) & 1) {
+        ctx.fillRect(offset + col*mSize, offset + row*mSize, mSize-1, mSize-1);
+      }
+    }
+  }
+
+  const linkName = link.split('/').pop();
+  const infoEl = document.getElementById('qrInfo');
+  if (infoEl) infoEl.textContent = `lf.io/${linkName} · ${size}px`;
+}
+
+function drawFinder(ctx, x, y, m, fg) {
+  ctx.fillStyle = fg;
+  ctx.fillRect(x, y, 7*m, 7*m);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(x+m, y+m, 5*m, 5*m);
+  ctx.fillStyle = fg;
+  ctx.fillRect(x+2*m, y+2*m, 3*m, 3*m);
+}
+
+function isFinderArea(row, col, modules) {
+  return (row < 8 && col < 8) ||
+         (row < 8 && col >= modules-8) ||
+         (row >= modules-8 && col < 8);
+}
+
+function simpleHash(s) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
+  return h;
+}
+
+function downloadQR() {
+  const canvas = document.getElementById('qrCanvas');
+  const link = document.createElement('a');
+  link.download = 'qrcode-linkforge.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('Downloaded!', 'QR code saved as PNG', 'success');
+}
+
+// ══════════════════════════════════════════════════════════
+// API KEYS
+// ══════════════════════════════════════════════════════════
+function renderApiKeys() {
+  const el = document.getElementById('apiKeyList');
+  if (!el) return;
+  el.innerHTML = state.apiKeys.map(k => `
+    <div style="padding:14px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:700;font-size:14px">${k.name}</div>
+        <span class="badge badge-active">● Active</span>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--primary-light);margin-bottom:8px">${k.prefix}••••••••••••</div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--text-muted)">
+        <span>⚡ ${k.rateLimit} req/min</span>
+        <span>📊 ${k.used.toLocaleString()} requests</span>
+        <span>📅 ${k.created}</span>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="btn btn-danger btn-sm" onclick="revokeKey('${k.id}')">🗑 Revoke</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function generateApiKey() {
+  const name = document.getElementById('keyName').value.trim();
+  if (!name) { toast('Error', 'Enter a key name', 'error'); return; }
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const raw = 'lf_' + Array.from({length:40}, () => chars[Math.floor(Math.random()*62)]).join('');
+  document.getElementById('generatedKey').textContent = raw;
+  document.getElementById('apiKeyResult').style.display = 'block';
+  const rateLimit = parseInt(document.getElementById('keyRateLimit').value);
+  state.apiKeys.push({ id: Date.now().toString(), name, prefix: raw.substring(0,12), rateLimit, used:0, created: new Date().toISOString().split('T')[0] });
+  renderApiKeys();
+  toast('API Key Generated!', 'Save it now — it won\'t be shown again', 'warning');
+}
+
+function revokeKey(id) {
+  state.apiKeys = state.apiKeys.filter(k => k.id !== id);
+  renderApiKeys();
+  toast('Key Revoked', 'API key has been permanently revoked', 'info');
+}
+
+// ══════════════════════════════════════════════════════════
+// SWAGGER
+// ══════════════════════════════════════════════════════════
+const ENDPOINTS = [
+  { method:'POST', path:'/api/v1/auth/register', tag:'Auth', desc:'Register a new user account' },
+  { method:'POST', path:'/api/v1/auth/login', tag:'Auth', desc:'Login and receive JWT tokens' },
+  { method:'POST', path:'/api/v1/auth/refresh', tag:'Auth', desc:'Rotate refresh token' },
+  { method:'POST', path:'/api/v1/auth/logout', tag:'Auth', desc:'Logout and revoke all tokens' },
+  { method:'GET',  path:'/api/v1/auth/verify-email', tag:'Auth', desc:'Verify email address from link' },
+  { method:'POST', path:'/api/v1/auth/forgot-password', tag:'Auth', desc:'Send password reset email' },
+  { method:'GET',  path:'/{shortCode}', tag:'Redirect', desc:'Public redirect (< 50ms on cache hit)' },
+  { method:'POST', path:'/api/v1/urls', tag:'URLs', desc:'Create a short URL' },
+  { method:'GET',  path:'/api/v1/urls', tag:'URLs', desc:'List URLs (paginated, sortable, filterable)' },
+  { method:'GET',  path:'/api/v1/urls/{id}', tag:'URLs', desc:'Get URL by ID' },
+  { method:'PUT',  path:'/api/v1/urls/{id}', tag:'URLs', desc:'Update URL' },
+  { method:'DELETE',path:'/api/v1/urls/{id}', tag:'URLs', desc:'Delete URL' },
+  { method:'PUT',  path:'/api/v1/urls/{id}/toggle', tag:'URLs', desc:'Toggle active/inactive' },
+  { method:'POST', path:'/api/v1/urls/bulk', tag:'URLs', desc:'Bulk create (max 100)' },
+  { method:'GET',  path:'/api/v1/urls/{id}/qr', tag:'QR', desc:'Generate PNG QR code' },
+  { method:'GET',  path:'/api/v1/urls/{id}/qr/svg', tag:'QR', desc:'Generate SVG QR code' },
+  { method:'POST', path:'/api/v1/urls/{id}/qr/with-logo', tag:'QR', desc:'QR with center logo overlay' },
+  { method:'GET',  path:'/api/v1/analytics/{urlId}/summary', tag:'Analytics', desc:'Click analytics summary' },
+  { method:'GET',  path:'/api/v1/analytics/{urlId}/clicks', tag:'Analytics', desc:'Daily click data' },
+  { method:'GET',  path:'/api/v1/analytics/{urlId}/countries', tag:'Analytics', desc:'Clicks by country' },
+  { method:'GET',  path:'/api/v1/analytics/{urlId}/devices', tag:'Analytics', desc:'Clicks by device type' },
+  { method:'GET',  path:'/api/v1/analytics/dashboard', tag:'Analytics', desc:'Global analytics dashboard' },
+  { method:'GET',  path:'/api/v1/users/me', tag:'Users', desc:'Get authenticated user profile' },
+  { method:'PUT',  path:'/api/v1/users/me', tag:'Users', desc:'Update profile' },
+  { method:'DELETE',path:'/api/v1/users/me', tag:'Users', desc:'Delete account' },
+  { method:'POST', path:'/api/v1/users/me/avatar', tag:'Users', desc:'Upload profile avatar' },
+  { method:'POST', path:'/api/v1/users/me/api-keys', tag:'API Keys', desc:'Generate API key (shown once)' },
+  { method:'GET',  path:'/api/v1/users/me/api-keys', tag:'API Keys', desc:'List API keys (masked)' },
+  { method:'DELETE',path:'/api/v1/users/me/api-keys/{id}', tag:'API Keys', desc:'Revoke API key' },
+  { method:'GET',  path:'/api/v1/admin/users', tag:'Admin', desc:'List all users (ADMIN)' },
+  { method:'DELETE',path:'/api/v1/admin/users/{id}', tag:'Admin', desc:'Delete user (ADMIN)' },
+  { method:'GET',  path:'/api/v1/admin/stats', tag:'Admin', desc:'Platform statistics (ADMIN)' },
+];
+
+const COLORS = { GET:'rgba(16,185,129,0.15)', POST:'rgba(99,102,241,0.15)', PUT:'rgba(245,158,11,0.15)', DELETE:'rgba(239,68,68,0.15)' };
+const BCOLORS = { GET:'rgba(16,185,129,0.3)', POST:'rgba(99,102,241,0.3)', PUT:'rgba(245,158,11,0.3)', DELETE:'rgba(239,68,68,0.3)' };
+const TCOLORS = { GET:'#6ee7b7', POST:'#a5b4fc', PUT:'#fcd34d', DELETE:'#f87171' };
+
+function renderSwagger() {
+  const el = document.getElementById('swaggerEndpoints');
+  if (!el) return;
+  const groups = {};
+  ENDPOINTS.forEach(e => { (groups[e.tag] = groups[e.tag]||[]).push(e); });
+  el.innerHTML = Object.entries(groups).map(([tag, eps]) => `
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">${tag}</div>
+      ${eps.map(e => `
+        <div class="swagger-row" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:4px;cursor:pointer;transition:background 0.2s;border:1px solid transparent" onmouseenter="this.style.background='rgba(255,255,255,0.03)'" onmouseleave="this.style.background='transparent'" onclick="tryEndpoint('${e.method}','${e.path}')">
+          <span style="font-size:11px;font-weight:800;padding:3px 8px;border-radius:5px;background:${COLORS[e.method]};border:1px solid ${BCOLORS[e.method]};color:${TCOLORS[e.method]};min-width:56px;text-align:center;font-family:'JetBrains Mono',monospace">${e.method}</span>
+          <code style="font-size:13px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;flex:1">${e.path}</code>
+          <span style="font-size:12px;color:var(--text-muted)">${e.desc}</span>
+          <span style="font-size:11px;color:var(--primary);font-weight:600">Try →</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function tryEndpoint(method, path) {
+  toast(`${method} ${path}`, 'In production: opens interactive form with auth token', 'info');
+}
+
+// ══════════════════════════════════════════════════════════
+// SECURITY
+// ══════════════════════════════════════════════════════════
+function initSecurity() {
+  const features = [
+    { icon:'🔐', name:'JWT Authentication', status:'enabled', detail:'HS256 · 15min access · 7day refresh rotation' },
+    { icon:'🛡️', name:'BCrypt Password Hashing', status:'enabled', detail:'Cost factor: 12 · ~250ms deliberate delay' },
+    { icon:'🚫', name:'Brute Force Protection', status:'enabled', detail:'Lock after 5 failures · 15min cooldown' },
+    { icon:'⚡', name:'Redis Rate Limiting', status:'enabled', detail:'60 req/min API · 300 req/min redirect · 10 auth/min' },
+    { icon:'🔍', name:'Google Safe Browsing', status:'warning', detail:'Disabled — set GOOGLE_SAFE_BROWSING_ENABLED=true' },
+    { icon:'🌐', name:'CORS Configuration', status:'enabled', detail:'Allowlist: localhost:3000, localhost:5173' },
+    { icon:'🏛️', name:'Security Headers', status:'enabled', detail:'HSTS · CSP · X-Frame-Options · Referrer-Policy' },
+    { icon:'✉️', name:'Email Verification', status:'enabled', detail:'24hr token · single-use · auto-expired' },
+    { icon:'📝', name:'Audit Logging', status:'enabled', detail:'All auth events · PII masked · No passwords' },
+    { icon:'🧹', name:'URL Sanitizer', status:'enabled', detail:'Blocks javascript: data: file: schemes + private IPs' },
+  ];
+  document.getElementById('securityFeatures').innerHTML = features.map(f => `
+    <div class="security-item">
+      <div class="security-icon">${f.icon}</div>
+      <div style="flex:1">
+        <div class="security-name">${f.name}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${f.detail}</div>
+      </div>
+      <div class="security-status ${f.status}">
+        <div class="status-dot"></div>
+        ${f.status === 'enabled' ? 'ENABLED' : f.status === 'warning' ? 'CONFIG NEEDED' : 'DISABLED'}
+      </div>
+    </div>
+  `).join('');
+
+  const logs = [
+    '[2026-08-02 23:30:12] [LOGIN_SUCCESS] userId=raj123 ip=49.36.x.x',
+    '[2026-08-02 23:30:08] [URL_CREATED] userId=raj123 shortCode=resume ip=49.36.x.x',
+    '[2026-08-02 23:29:41] [URL_CREATED] userId=raj123 shortCode=github ip=49.36.x.x',
+    '[2026-08-02 22:15:03] [LOGIN_FAILED] email=ra***@gmail.com ip=192.0.2.x',
+    '[2026-08-02 22:15:01] [LOGIN_FAILED] email=ra***@gmail.com ip=192.0.2.x',
+    '[2026-08-02 22:15:00] [LOGIN_FAILED] email=ra***@gmail.com ip=192.0.2.x',
+    '[2026-08-02 22:14:59] [ACCOUNT_LOCKED] userId=unknown ip=192.0.2.x',
+    '[2026-08-02 21:00:00] [SCHEDULER] Expired URL cleanup: 0 deactivated',
+    '[2026-08-02 20:00:00] [SCHEDULER] Cache refresh: 4 URLs warmed',
+    '[2026-08-02 19:30:22] [REGISTER] userId=new123 email=us***@gmail.com ip=203.0.x.x',
+  ];
+  document.getElementById('auditLog').innerHTML = logs.map((l, i) => {
+    const color = l.includes('FAILED')||l.includes('LOCKED') ? 'var(--danger)' :
+                  l.includes('SUCCESS')||l.includes('CREATED')||l.includes('REGISTER') ? 'var(--success)' :
+                  'var(--text-secondary)';
+    return `<div class="t-line" style="color:${color};margin-bottom:5px;opacity:${1-i*0.07}">${l}</div>`;
+  }).join('');
+}
+
+function loadSampleJWT() {
+  const sample = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1NTA4ZmU3Zi1iOWMwLTQ4ZDMtOGFiNS0zMGJmYjkxOGI2OTIiLCJyb2xlIjoiVVNFUiIsImVtYWlsVmVyaWZpZWQiOnRydWUsImlhdCI6MTc1NDM5NDAwMCwiZXhwIjoxNzU0Mzk0OTAwLCJqdGkiOiJhYmNkLWVmZ2gtMTIzNCJ9.signature';
+  document.getElementById('jwtInput').value = sample;
+  decodeJWT();
+}
+
+function decodeJWT() {
+  const token = document.getElementById('jwtInput').value.trim();
+  const el = document.getElementById('jwtDecoded');
+  if (!token) { el.innerHTML = '<div class="t-line t-gray">// Paste a JWT to decode</div>'; return; }
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) throw new Error('Invalid JWT');
+    const header = JSON.parse(atob(parts[0].replace(/-/g,'+').replace(/_/g,'/')));
+    const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+    const exp = payload.exp ? new Date(payload.exp * 1000).toLocaleString() : 'N/A';
+    const iat = payload.iat ? new Date(payload.iat * 1000).toLocaleString() : 'N/A';
+    el.innerHTML = `
+      <div class="t-line t-gray">// Header</div>
+      <div class="t-line t-blue">{"alg": "${header.alg}"}</div>
+      <div style="height:8px"></div>
+      <div class="t-line t-gray">// Payload</div>
+      <div class="t-line t-green">sub: "${payload.sub || 'uuid-here'}"</div>
+      <div class="t-line t-green">role: "${payload.role || 'USER'}"</div>
+      <div class="t-line t-green">emailVerified: ${payload.emailVerified ?? true}</div>
+      <div class="t-line t-yellow">iat: ${iat}</div>
+      <div class="t-line t-yellow">exp: ${exp}</div>
+      <div class="t-line t-white">jti: "${payload.jti || 'abcd-1234'}"</div>
+      <div style="height:8px"></div>
+      <div class="t-line t-gray">// Signature: HS256 (HMAC-SHA256)</div>
+    `;
+  } catch(e) {
+    el.innerHTML = '<div class="t-line t-red">Invalid JWT format</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════════════════════
+function renderAdmin() {
+  const users = [
+    { name:'Rajvardhan', email:'raj@linkforge.io', role:'ADMIN', links:4, joined:'2025-05-01', active:true },
+    { name:'Alice Chen', email:'ali***@gmail.com', role:'USER', links:23, joined:'2025-06-12', active:true },
+    { name:'Bob Smith', email:'bob***@yahoo.com', role:'USER', links:7, joined:'2025-07-03', active:true },
+    { name:'Charlie Dev', email:'cha***@gmail.com', role:'USER', links:0, joined:'2025-07-28', active:false },
+  ];
+  document.getElementById('adminUsersTable').innerHTML = users.map(u => `
+    <tr>
+      <td><b>${u.name}</b></td>
+      <td style="font-size:12px;color:var(--text-muted)">${u.email}</td>
+      <td><span class="badge ${u.role==='ADMIN'?'badge-private':'badge-safe'}">${u.role}</span></td>
+      <td>${u.links}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${u.joined}</td>
+      <td><span class="badge ${u.active?'badge-active':'badge-inactive'}">${u.active?'Active':'Disabled'}</span></td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="toast('Admin Action','Viewing user details','info')">👁</button>
+        <button class="btn btn-danger btn-sm" onclick="toast('Admin Action','User ${u.name} disabled','warning')">🚫</button>
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  initDashboard();
+  // Live counter animation
+  animateValue('stat-clicks', 0, 12847, 1500);
+});
+
+function animateValue(id, start, end, duration) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const startTime = performance.now();
+  const update = (now) => {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + (end - start) * eased).toLocaleString();
+    if (progress < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+</script>
+</body>
+</html>

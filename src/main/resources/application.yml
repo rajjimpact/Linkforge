@@ -1,0 +1,214 @@
+spring:
+  application:
+    name: linkforge
+
+  # ===== DATABASE =====
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:linkforge}
+    username: ${DB_USERNAME:linkforge_user}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: LinkForge-HikariPool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # ===== FLYWAY =====
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  # ===== REDIS =====
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 1000ms
+
+  # ===== CACHE =====
+  cache:
+    type: redis
+    redis:
+      time-to-live: 86400000   # 24 hours default
+
+  # ===== MAIL =====
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+
+  # ===== FILE UPLOAD =====
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+
+  # ===== THYMELEAF =====
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: true
+
+  # ===== VIRTUAL THREADS (Java 21) =====
+  threads:
+    virtual:
+      enabled: true
+
+# ===== SERVER =====
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/css,application/javascript
+    min-response-size: 1024
+  http2:
+    enabled: true
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+# ===== JWT =====
+application:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:900000}       # 15 minutes
+    refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000}  # 7 days
+    issuer: linkforge
+
+  # ===== BASE URL =====
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:3000}
+  domain: ${APP_DOMAIN:localhost:8080}
+
+  # ===== CORS =====
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+  # ===== RATE LIMITING =====
+  rate-limit:
+    enabled: true
+    requests-per-minute: ${RATE_LIMIT_REQUESTS_PER_MINUTE:60}
+    burst-size: ${RATE_LIMIT_BURST_SIZE:10}
+    api-key-requests-per-minute: 100
+    redirect-requests-per-minute: 300
+
+  # ===== SAFE BROWSING =====
+  safe-browsing:
+    enabled: ${GOOGLE_SAFE_BROWSING_ENABLED:false}
+    api-key: ${GOOGLE_SAFE_BROWSING_API_KEY:}
+    api-url: https://safebrowsing.googleapis.com/v4/threatMatches:find
+
+  # ===== FILE STORAGE =====
+  storage:
+    upload-dir: ${UPLOAD_DIR:./uploads}
+    avatar-dir: ${UPLOAD_DIR:./uploads}/avatars
+    qr-dir: ${UPLOAD_DIR:./uploads}/qr-codes
+    max-avatar-size-mb: 5
+
+  # ===== LINK DEFAULTS =====
+  link:
+    default-expiry-days: 0           # 0 = never expire
+    max-custom-alias-length: 50
+    min-custom-alias-length: 3
+    short-code-length: 7
+    max-bulk-create: 100
+
+  # ===== BRUTE FORCE PROTECTION =====
+  security:
+    max-login-attempts: 5
+    lockout-duration-minutes: 15
+    password-reset-token-expiry-minutes: 60
+    email-verify-token-expiry-hours: 24
+
+  # ===== SCHEDULER =====
+  scheduler:
+    cleanup-cron: "0 0 2 * * *"        # 2 AM daily
+    token-cleanup-cron: "0 0 3 * * *"  # 3 AM daily
+    weekly-report-cron: "0 0 8 ? * MON" # Monday 8 AM
+    url-health-check-cron: "0 0 */4 * * *" # Every 4 hours
+    cache-refresh-cron: "0 0 * * * *"  # Every hour
+
+# ===== ACTUATOR =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+# ===== SPRINGDOC / SWAGGER =====
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+  info:
+    title: LinkForge API
+    version: 1.0.0
+    description: Secure, scalable URL management platform with analytics
+
+# ===== LOGGING =====
+logging:
+  level:
+    root: INFO
+    com.linkforge: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/linkforge.log
+    max-size: 10MB
+    max-history: 30

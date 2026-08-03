@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email — LinkForge</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #e2e8f0; }
+    .container { max-width: 600px; margin: 40px auto; background: #1a1a2e; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 48px 40px; text-align: center; }
+    .logo { font-size: 28px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+    .logo span { color: #c4b5fd; }
+    .body { padding: 48px 40px; }
+    h1 { font-size: 24px; font-weight: 700; color: #f1f5f9; margin-bottom: 16px; }
+    p { color: #94a3b8; line-height: 1.7; margin-bottom: 16px; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; text-decoration: none; padding: 16px 36px; border-radius: 10px; font-weight: 600; font-size: 16px; margin: 24px 0; }
+    .info-box { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; padding: 16px; margin: 24px 0; }
+    .info-box p { color: #a5b4fc; margin: 0; }
+    .footer { background: #0f0f1a; padding: 24px 40px; text-align: center; }
+    .footer p { color: #475569; font-size: 13px; }
+    .url-text { font-size: 12px; color: #6366f1; word-break: break-all; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">Link<span>Forge</span></div>
+    <p style="color: #c4b5fd; margin-top: 8px; font-size: 15px;">Smart URL Shortener</p>
+  </div>
+  <div class="body">
+    <h1>Verify your email address</h1>
+    <p>Hi <strong th:text="${firstName}">there</strong>,</p>
+    <p>Welcome to LinkForge! To get started, please verify your email address by clicking the button below.</p>
+
+    <div style="text-align: center;">
+      <a th:href="${verifyUrl}" class="btn">✉️ Verify My Email</a>
+    </div>
+
+    <div class="info-box">
+      <p>⏱ This link expires in <strong th:text="${expiryHours}">24</strong> hours.</p>
+    </div>
+
+    <p>If the button doesn't work, copy and paste this URL into your browser:</p>
+    <p class="url-text" th:text="${verifyUrl}">https://...</p>
+
+    <p>If you didn't create an account, you can safely ignore this email.</p>
+  </div>
+  <div class="footer">
+    <p>© 2025 LinkForge · You're receiving this because you signed up at linkforge.io</p>
+  </div>
+</div>
+</body>
+</html>

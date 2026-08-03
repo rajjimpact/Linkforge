@@ -1,0 +1,27 @@
+spring:
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+  thymeleaf:
+    cache: true
+  flyway:
+    clean-disabled: true
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+logging:
+  level:
+    root: WARN
+    com.linkforge: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+
+management:
+  endpoint:
+    health:
+      show-details: never

@@ -1,0 +1,57 @@
+# ===== COMPILED OUTPUT =====
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ===== MAVEN =====
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ===== IDE =====
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+
+# ===== ENVIRONMENT / SECRETS =====
+.env
+.env.local
+.env.production
+*.env
+
+# ===== LOGS =====
+logs/
+*.log
+*.log.*
+
+# ===== UPLOADS / GENERATED FILES =====
+uploads/
+qr-codes/
+avatars/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== SPRING BOOT =====
+spring-shell.log
+
+# ===== DOCKER =====
+.docker/
+
+# ===== OWASP REPORTS =====
+dependency-check-report.html
+dependency-check-report.xml
+
+# ===== TESTCONTAINERS CACHE =====
+.testcontainers.properties
