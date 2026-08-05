@@ -226,3 +226,18 @@ GitHub Actions automatically builds, tests, and deploys on push to `main`.
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE)
+
+---
+
+## 📝 Summary
+
+LinkForge is an enterprise-ready, high-performance URL management and redirection platform built with Java 21 (leveraging Virtual Threads) and Spring Boot 3.3. It is designed to handle high-throughput link shortening, custom alias generation, dynamic QR code creation, and real-time click analytics with sub-50ms redirect latency.
+
+### Key Capabilities
+- **Sub-Millisecond Caching & High Performance**: Powered by Redis 7 caching and optimized database queries in PostgreSQL 16, delivering ultra-fast temporary (302) redirects while recording comprehensive click metadata asynchronously.
+- **Enterprise Security**: Implements JWT authentication with refresh token rotation, BCrypt password hashing, brute-force protection, sliding-window rate limiting, and automated dangerous scheme/malicious URL filtering via Google Safe Browsing integration.
+- **Rich Analytics & QR Tools**: Captures granular geolocation, device, browser, and referrer data for detailed performance dashboards, alongside customizable PNG/SVG QR code generation with embedded logos.
+- **Production Infrastructure**: Built with Docker multi-stage builds, Nginx reverse proxy configuration, Flyway database migrations, Micrometer/Prometheus actuator metrics, and automated GitHub Actions CI/CD workflows.
+
+LinkForge serves as a complete, scalable solution for developers and organizations seeking secure, reliable, and analytics-driven link management.
+
